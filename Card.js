@@ -1,106 +1,98 @@
-// Создаем массивы для цветов и достоинств карт
-var colors = ["R", "G", "B", "W"];
-var values = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
-
-// Создаем функцию для генерации колоды карт
-var createDeck = function() {
-  var deck = [];
-  for (var i = 0; i < colors.length; i++) {
-    for (var j = 0; j < values.length; j++) {
-      var card = colors[i] + values[j];
-      deck.push(card);
+<?php
+// Создаем массив с цветами карт
+$colors = array("R", "G", "B", "W");
+// Создаем массив с достоинствами карт
+$values = array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+// Создаем пустой массив для хранения колоды карт
+$deck = array();
+// Заполняем колоду карт всеми возможными комбинациями цветов и достоинств
+foreach ($colors as $color) {
+    foreach ($values as $value) {
+        $deck[] = $color . $value;
     }
-  }
-  return deck;
-};
-
-// Создаем функцию для перемешивания колоды карт
-var shuffleDeck = function(deck) {
-  for (var i = deck.length - 1; i > 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1));
-    var temp = deck[i];
-    deck[i] = deck[j];
-    deck[j] = temp;
-  }
-};
-
-var startGame = function(N, C) {
-  if (N < 1 || C < 1) {
-    console.log("Неверные параметры игры");
-    return;
-  }
-
-  var deck = createDeck();
-  shuffleDeck(deck);
-
-  // Проверяем, хватает ли карт для всех игроков
-  if (N * C > deck.length) {
-    console.error("Недостаточно карт в колоде");
-    return;
-  }
-
-  // Создаем массив для хранения карт игроков
-  var players = [];
-
-  // Раздаем карты игрокам по очереди
-  for (var i = 0; i < C; i++) {
-    for (var j = 0; j < N; j++) {
-      // Берем верхнюю карту из колоды и добавляем ее в массив игрока
-      var card = deck.pop();
-      if (!players[j]) {
-        players[j] = [];
-      }
-      players[j].push(card);
+}
+// Создаем пустой массив для хранения игроков и их карт
+$players = array();
+// Функция для раздачи N случайных карт C игрокам
+function start($N, $C) {
+    global $deck; // Используем глобальную переменную колоды карт
+    global $players; // Используем глобальную переменную игроков и их карт
+    // Проверяем корректность входных данных
+    if (!is_int($N) || !is_int($C) || $N <= 0 || $C <= 0) {
+        echo "Неверные параметры команды start\n";
+        return;
     }
-  }
-// Сохраняем массив игроков в глобальную переменную
-  window.players = players;
-};
-
-// Создаем функцию для получения карт игрока по номеру
-var getCards = function(C) {
-  // Проверяем корректность входных данных
-  if (C < 1) {
-    console.error("Неверный номер игрока");
-    return;
-  }
-
-  // Проверяем, существует ли массив игроков
-  if (!window.players) {
-    console.error("Игра не начата");
-    return;
-  }
-
-  // Проверяем, существует ли игрок с таким номером
-  if (!window.players[C - 1]) {
-    console.error("Такого игрока нет");
-    return;
-  }
-
-  // Выводим номер игрока и список его карт через пробел
-  var output = C + " ";
-  for (var i = 0; i < window.players[C - 1].length; i++) {
-    output += window.players[C - 1][i] + " ";}
-  console.log(output);
-};
-
-// Создаем функцию для обработки консольных команд
-var processCommand = function(command) {
-  // Разбиваем команду на слова по пробелу
-  var words = command.split(" ");
-
-  // Проверяем, какая команда введена
-  if (words[0] === "start") {
-    // Вызываем функцию startGame с параметрами N и C
-    var N = parseInt(words[1]);
-    var C = parseInt(words[2]);
-    startGame(N, C);
-  } else if (words[0] === "get-cards") {
-    // Вызываем функцию getCards с параметром C
-    var C = parseInt(words[1]);
-    getCards(C);
-  } else {
-    // Выводим сообщение об ошибке
-    console.error("Неверная команда");
-  }
-};
+    if ($N * $C > count($deck)) {
+        echo "Недостаточно карт в колоде\n";
+        return;
+    }
+    // Очищаем массив игроков и их карт от предыдущей раздачи
+    $players = array();
+    // Перемешиваем колоду карт случайным образом
+    shuffle($deck);
+    // Раздаем N случайных карт C игрокам по очереди
+    for ($i = 0; $i < $C; $i++) {
+        // Создаем пустой массив для хранения карт текущего игрока
+        $player_cards = array();
+        for ($j = 0; $j < $N; $j++) {
+            // Добавляем первую карту из колоды в массив карт текущего игрока
+            $player_cards[] = array_shift($deck);
+        }
+        // Добавляем текущего игрока и его карты в массив игроков и их карт 
+        // Используем индексацию с единицы для удобства пользователя 
+        $players[$i + 1] = $player_cards;
+    }
+}
+// Функция для вывода списка карт заданного игрока 
+function get_cards($C) {
+    global $players; // Используем глобальную переменную игроков и их карт 
+    // Проверяем корректность входных данных 
+    if (!is_int($C) || !isset($players[$C])) {
+        echo "Неверный параметр команды get-cards\n";
+        return;
+    }
+ // Выводим номер игрока и список его карт через пробел 
+    echo $C . " " . implode(" ", $players[$C]) . "\n";
+}
+// Функция для обработки консольных команд 
+function handle_command($command) {
+    // Разбиваем команду на слова по пробелам 
+    $words = explode(" ", $command);
+    // Проверяем первое слово команды 
+    switch ($words[0]) {
+        case "start":
+            // Проверяем количество слов в команде 
+            if (count($words) != 3) {
+                echo "Неверный формат команды start\n";
+                return;
+            }
+            // Преобразуем второе и третье слова в целые числа 
+            $N = intval($words[1]);
+            $C = intval($words[2]);
+            // Вызываем функцию для раздачи карт 
+            start($N, $C);
+            break;
+        case "get-cards":
+            // Проверяем количество слов в команде 
+            if (count($words) != 2) {
+                echo "Неверный формат команды get-cards\n";
+                return;
+            }
+            // Преобразуем второе слово в целое число 
+            $C = intval($words[1]);
+            // Вызываем функцию для вывода списка карт заданного игрока
+ get_cards($C);
+            break;
+        default:
+            // Неизвестная команда 
+            echo "Неверная команда\n";
+    }
+}
+// Читаем консольный ввод построчно 
+while ($line = fgets(STDIN)) {
+    // Удаляем символ перевода строки из ввода 
+    $line = trim($line);
+    // Обрабатываем введенную команду 
+    handle_command($line);
+}
+?>
